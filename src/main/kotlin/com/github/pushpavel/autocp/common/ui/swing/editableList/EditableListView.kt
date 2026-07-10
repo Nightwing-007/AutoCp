@@ -5,6 +5,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.ui.CollectionListModel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBUI
 import java.awt.Component
@@ -50,10 +51,12 @@ class EditableListView<T>(
                     val item = itemFactory()
                     model.add(item)
                 }
-                trailingComponent?.let { cell(it) }
+                trailingComponent?.let {
+                    cell(it).resizableColumn().align(AlignX.RIGHT)
+                }
             }
         }.apply {
-            border = JBUI.Borders.emptyLeft(8)
+            border = JBUI.Borders.empty(0, 8)
         }, itemConstraints)
 
         // fills remaining space

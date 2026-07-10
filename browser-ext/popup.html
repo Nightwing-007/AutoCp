@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 240px;
+            margin: 0;
+            padding: 14px;
+            font: 13px/1.5 system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        h1 {
+            margin: 0 0 10px;
+            font-size: 14px;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #9e9e9e;
+        }
+        .dot.connected { background: #4caf50; }
+        label { display: block; margin-bottom: 4px; color: #94a3b8; }
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 6px 8px;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            background: #1e293b;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 7px 0;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: #fff;
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+        button.secondary { background: #334155; }
+    </style>
+</head>
+<body>
+    <h1>AutoCp Submit</h1>
+    <div class="status">
+        <div id="dot" class="dot"></div>
+        <span id="statusText">Checking…</span>
+    </div>
+    <label for="port">AutoCp plugin port</label>
+    <input id="port" type="number" min="1" max="65535">
+    <button id="save">Save &amp; Reconnect</button>
+    <button id="active" class="secondary">Use this browser for submits</button>
+    <script src="popup.js"></script>
+</body>
+</html>

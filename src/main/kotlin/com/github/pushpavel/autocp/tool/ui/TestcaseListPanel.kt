@@ -32,6 +32,7 @@ import java.awt.BorderLayout
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
+import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.event.ListDataEvent
 import javax.swing.event.ListDataListener
@@ -53,6 +54,12 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
     val component: JComponent
 
     init {
+        val submitButton = JButton("Submit").apply {
+            toolTipText = "Submit this solution to its online judge via the AutoCp Submit browser extension"
+            isVisible = false
+            addActionListener { SolutionSubmitter.submit(project, pathString) }
+        }
+
         val listComponent = EditableListView(
             testcaseListModel,
             { TestcasePanel(testcaseListModel) },
@@ -60,7 +67,8 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
                 val name = testcaseNameEnforcer.buildUniqueNameWithPrefix("Testcase")
                 Testcase(name, "input", "output")
             },
-            "New Testcase"
+            "New Testcase",
+            submitButton
         )
 
         val copyAllAction = object : DumbAwareAction("Copy All Testcases", null, AllIcons.Actions.Copy) {
@@ -105,25 +113,6 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
             templatePresentation.icon = AllIcons.General.GearPlain
         }
 
-        val submitAction = object : DumbAwareAction(
-            "Submit Solution",
-            "Submit this solution to its online judge via the browser extension",
-            AllIcons.Actions.Upload
-        ) {
-            override fun actionPerformed(e: AnActionEvent) {
-                SolutionSubmitter.submit(project, pathString)
-            }
-
-            override fun update(e: AnActionEvent) {
-                e.presentation.isVisible =
-                    solutionFiles[pathString]?.getLinkedProblem(project)?.url?.isNotBlank() == true
-            }
-
-            override fun getActionUpdateThread() = ActionUpdateThread.EDT
-        }
-
-        val toolbarGroup = DefaultActionGroup(submitAction, popupGroup)
-
         component = BorderLayoutPanel().apply {
             add(panel {
                 row {
@@ -140,7 +129,7 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
 
                     cell(
                         ActionManager.getInstance()
-                            .createActionToolbar(ActionPlaces.TOOLWINDOW_CONTENT, toolbarGroup, true)
+                            .createActionToolbar(ActionPlaces.TOOLWINDOW_CONTENT, popupGroup, true)
                             .apply { targetComponent = null }
                             .component
                     )
@@ -162,6 +151,12 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
                 resetting = true
                 testcaseListModel.replaceAll(it.testcases)
                 resetting = false
+            }
+        }
+
+        scope.launch {
+            flow.collect {
+                submitButton.isVisible = it.getLinkedProblem(project)?.url?.isNotBlank() == true
             }
         }
 

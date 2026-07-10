@@ -83,7 +83,8 @@ object AutoCpNotifications {
 
     fun submitBrowserNotConnected() = notifyWarn(
         "Browser extension not connected",
-        "Submitting needs the \"CPH-NG Submit\" browser extension connected on port ${R.others.submitServerPort}.\n" +
+        "Submitting needs the \"AutoCp Submit\" browser extension (or the protocol-compatible \"CPH-NG Submit\") " +
+                "connected on port ${R.others.submitServerPort}.\n" +
                 "Install it, keep the browser open and check that the extension popup shows it is connected."
     )
 

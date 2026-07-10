@@ -7,6 +7,7 @@ import com.github.pushpavel.autocp.common.res.R
 import com.github.pushpavel.autocp.common.ui.swing.editableList.EditableListView
 import com.github.pushpavel.autocp.database.SolutionFiles
 import com.github.pushpavel.autocp.database.models.Testcase
+import com.github.pushpavel.autocp.submit.SolutionSubmitter
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
@@ -104,6 +105,25 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
             templatePresentation.icon = AllIcons.General.GearPlain
         }
 
+        val submitAction = object : DumbAwareAction(
+            "Submit Solution",
+            "Submit this solution to its online judge via the browser extension",
+            AllIcons.Actions.Upload
+        ) {
+            override fun actionPerformed(e: AnActionEvent) {
+                SolutionSubmitter.submit(project, pathString)
+            }
+
+            override fun update(e: AnActionEvent) {
+                e.presentation.isVisible =
+                    solutionFiles[pathString]?.getLinkedProblem(project)?.url?.isNotBlank() == true
+            }
+
+            override fun getActionUpdateThread() = ActionUpdateThread.EDT
+        }
+
+        val toolbarGroup = DefaultActionGroup(submitAction, popupGroup)
+
         component = BorderLayoutPanel().apply {
             add(panel {
                 row {
@@ -120,7 +140,7 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
 
                     cell(
                         ActionManager.getInstance()
-                            .createActionToolbar(ActionPlaces.TOOLWINDOW_CONTENT, popupGroup, true)
+                            .createActionToolbar(ActionPlaces.TOOLWINDOW_CONTENT, toolbarGroup, true)
                             .apply { targetComponent = null }
                             .component
                     )

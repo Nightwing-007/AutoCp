@@ -1,6 +1,7 @@
 package com.github.pushpavel.autocp.common.res
 
 import com.github.pushpavel.autocp.common.helpers.notifyErr
+import com.github.pushpavel.autocp.common.helpers.notifyInfo
 import com.github.pushpavel.autocp.common.helpers.notifyWarn
 import com.github.pushpavel.autocp.gather.base.ProblemGatheringErr
 import com.intellij.util.IncorrectOperationException
@@ -55,6 +56,46 @@ object AutoCpNotifications {
             "You may have not escaped a file template directive like #define which is also a valid c++ syntax\n\n" +
             "You can <a href=\"https://velocity.apache.org/engine/2.0/vtl-reference.html\" >refer</a> more about velocity file template syntax\n" +
             "Or if you do not use any file template specific syntax, simply wrap the entire file template within #[[template]]#"
+
+    fun submitServerPortTaken(port: Int) = notifyErr(
+        "AutoCp submit server could not start",
+        "Port $port is busy, so the browser extension cannot connect for submitting.\n" +
+                "Another tool (like the cph-ng VSCode extension) may be using it. " +
+                "Free the port and restart the IDE to enable submitting."
+    )
+
+    fun submitFileNotEnabled() = notifyWarn(
+        "Can't submit this file",
+        "This file is not enabled with AutoCp. open View > ToolWindows > AutoCp to do so."
+    )
+
+    fun submitNoLinkedProblem() = notifyWarn(
+        "Can't submit this file",
+        "This file is not linked to any problem. " +
+                "Gather the problem with competitive companion or associate the file in the AutoCp tool window."
+    )
+
+    fun submitInvalidUrl(url: String) = notifyWarn(
+        "Can't submit this file",
+        if (url.isBlank()) "The linked problem has no URL."
+        else "The linked problem's URL could not be parsed: $url"
+    )
+
+    fun submitBrowserNotConnected() = notifyWarn(
+        "Browser extension not connected",
+        "Submitting needs the \"CPH-NG Submit\" browser extension connected on port ${R.others.submitServerPort}.\n" +
+                "Install it, keep the browser open and check that the extension popup shows it is connected."
+    )
+
+    fun submitEmptySource() = notifyWarn(
+        "Can't submit this file",
+        "The source code is empty."
+    )
+
+    fun submitSent(problemName: String) = notifyInfo(
+        "Sent to browser extension",
+        "\"$problemName\" was handed to the browser extension, which will open the submit page and submit it."
+    )
 
     fun noConfigInContext() = notifyErr(
         "Can't run file with with AutoCp",

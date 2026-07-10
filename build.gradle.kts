@@ -42,10 +42,15 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-java:$ktor_version")
+    implementation("org.java-websocket:Java-WebSocket:1.6.0") {
+        exclude(group = "org.slf4j") // provided by the IntelliJ platform
+    }
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.4")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
+    // real Socket.IO client used to verify SubmitServer speaks the cph-ng router protocol
+    testImplementation("io.socket:socket.io-client:2.1.2")
 //    testImplementation("io.mockk:mockk:1.13.2")
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html

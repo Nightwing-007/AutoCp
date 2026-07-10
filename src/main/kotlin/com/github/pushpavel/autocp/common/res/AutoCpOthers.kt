@@ -3,6 +3,11 @@ package com.github.pushpavel.autocp.common.res
 import com.github.pushpavel.autocp.build.DefaultLangData
 
 object AutoCpOthers {
+    // port the "CPH-NG Submit" browser extension connects to (cph-ng router default).
+    // SubmitBridge binds it before ProblemGatheringBridge starts, so the gathering
+    // server falls through to the next free port of competitiveCompanionPorts.
+    const val submitServerPort = 27121
+
     val competitiveCompanionPorts = listOf(
         27121, // Competitive Programming Helper
         10045, // CP Editor

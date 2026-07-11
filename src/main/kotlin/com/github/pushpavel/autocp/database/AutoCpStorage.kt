@@ -64,6 +64,7 @@ class AutoCpStorage(val project: Project) {
             })
             database.problemsFlow.value = newDb.problems
             database.solutionFilesFlow.value = newDb.solutionFiles
+            database.mutated = false
         } catch (e: Exception) {
             log.warn("Failed to reload .autocp from disk", e)
         }
@@ -88,7 +89,8 @@ class AutoCpStorageSaver : FileDocumentManagerListener {
                 return
             val path = Paths.get(Path(project.basePath!!).pathString, ".autocp")
             var virtualFile = VfsUtil.findFile(path, true)
-            val db = project.service<AutoCpStorage>().serializableDatabase
+            val storage = project.service<AutoCpStorage>()
+            val db = storage.serializableDatabase
 
 
             if (virtualFile?.isValid != true && DEFAULT_AUTO_CP_DB != db) {
@@ -111,8 +113,9 @@ class AutoCpStorageSaver : FileDocumentManagerListener {
                     R.notify.couldNotWriteToAutoCpFile()
                     return@runReadAction
                 }
-                if (db == DEFAULT_AUTO_CP_DB && document.text.isNotBlank()) {
-                    project.service<AutoCpStorage>().reloadFromDisk()
+                // in-memory state was never populated, prefer the on-disk content over clobbering it
+                if (!storage.database.mutated && db == DEFAULT_AUTO_CP_DB && document.text.isNotBlank()) {
+                    storage.reloadFromDisk()
                     return@runReadAction
                 }
                 val newText = Json.encodeToString(db)

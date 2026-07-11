@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-07-11
+
 - feat: only show problem gathering popup in the focused IDE window by @znzryb in https://github.com/Pushpavel/AutoCp/pull/168
 - fix: reload .autocp when modified externally by @znzryb in https://github.com/Pushpavel/AutoCp/pull/170
 - build: support IDE versions up to 2026.1
@@ -193,7 +195,8 @@
 
 - Initial Release 🎉🎉😀
 
-[Unreleased]: https://github.com/Pushpavel/AutoCp/compare/v0.9.2...HEAD
+[Unreleased]: https://github.com/Pushpavel/AutoCp/compare/v0.9.3...HEAD
+[0.9.3]: https://github.com/Pushpavel/AutoCp/compare/v0.9.2...v0.9.3
 [0.9.2]: https://github.com/Pushpavel/AutoCp/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/Pushpavel/AutoCp/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/Pushpavel/AutoCp/compare/v0.8.0...v0.9.0

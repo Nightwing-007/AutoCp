@@ -7,7 +7,6 @@ import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.util.SystemInfo
 import io.ktor.client.*
 import io.ktor.client.plugins.observer.*
@@ -46,7 +45,8 @@ class GoogleAnalytics {
                             put("value", ApplicationInfo.getInstance().build.asStringWithoutProductCodeAndSnapshot())
                         }
                         putJsonObject("version") {
-                            put("value", PluginManagerCore.getPlugin(PluginId.getId(R.keys.pluginId))?.version)
+                            // avoid PluginId.getId: it compiles to a PluginId.Companion reference that older IDEs (< 2025.2) don't have
+                            put("value", PluginManagerCore.plugins.find { it.pluginId.idString == R.keys.pluginId }?.version)
                         }
                     }
                     put("non_personalized_ads", true)

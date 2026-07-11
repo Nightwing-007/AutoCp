@@ -28,7 +28,7 @@ class AutoCpStorage(val project: Project) {
 
     val log = Logger.getInstance(AutoCpStorage::class.java)
 
-    val database by lazy {
+    private val databaseDelegate = lazy {
         if(!project.isDefault){
             val converter = AutoCpFileConversion(project)
             converter.convert()
@@ -51,6 +51,25 @@ class AutoCpStorage(val project: Project) {
         AutoCpDatabase(MutableStateFlow(db.problems), MutableStateFlow(db.solutionFiles))
     }
 
+    val database by databaseDelegate
+
+    fun reloadFromDisk() {
+        if (project.isDefault) return
+        if (!databaseDelegate.isInitialized()) return
+        val path = Paths.get(project.basePath!!, ".autocp")
+        if (!path.exists()) return
+        try {
+            val newDb = Migrations.migrateDB(runReadAction {
+                Json.parseToJsonElement(path.readText())
+            })
+            database.problemsFlow.value = newDb.problems
+            database.solutionFilesFlow.value = newDb.solutionFiles
+            database.mutated = false
+        } catch (e: Exception) {
+            log.warn("Failed to reload .autocp from disk", e)
+        }
+    }
+
     val serializableDatabase
         get() = database.run {
             AutoCpDB(
@@ -70,7 +89,8 @@ class AutoCpStorageSaver : FileDocumentManagerListener {
                 return
             val path = Paths.get(Path(project.basePath!!).pathString, ".autocp")
             var virtualFile = VfsUtil.findFile(path, true)
-            val db = project.service<AutoCpStorage>().serializableDatabase
+            val storage = project.service<AutoCpStorage>()
+            val db = storage.serializableDatabase
 
 
             if (virtualFile?.isValid != true && DEFAULT_AUTO_CP_DB != db) {
@@ -93,8 +113,15 @@ class AutoCpStorageSaver : FileDocumentManagerListener {
                     R.notify.couldNotWriteToAutoCpFile()
                     return@runReadAction
                 }
+                // in-memory state was never populated, prefer the on-disk content over clobbering it
+                if (!storage.database.mutated && db == DEFAULT_AUTO_CP_DB && document.text.isNotBlank()) {
+                    storage.reloadFromDisk()
+                    return@runReadAction
+                }
+                val newText = Json.encodeToString(db)
+                if (document.text == newText) return@runReadAction
                 runWriteAction {
-                    document.setText(Json.encodeToString(db))
+                    document.setText(newText)
                 }
             }
         }

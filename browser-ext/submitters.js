@@ -52,11 +52,20 @@ const AutoCpSubmitters = (() => {
     // texts. `family` tells whether an option is that language at all — when
     // the currently selected option already matches, it is kept, so the user's
     // preferred dialect (say, a specific C++ standard on codeforces) survives.
-    // `prefer` picks a new option; first pattern with a hit wins.
+    // `prefer` picks a new option: first pattern with a hit wins, and within
+    // that tier the candidates are ranked by `version` (highest first; the
+    // generic scorer below when absent) and then by having an O2/optimized
+    // variant ("C++23 O2" over "C++23", "Rust O2" over "Rust").
     const LANGUAGE_SPECS = {
         cpp: {
             family: /[cg]\+\+/i,
             prefer: [/[cg]\+\+\s*2[3-9]/i, /[cg]\+\+\s*20/i, /[cg]\+\+/i],
+            version(text) {
+                const match = text.match(/[cg]\+\+\s*(\d{2})/i);
+                if (!match) return 0;
+                const std = Number(match[1]);
+                return std >= 90 ? 1900 + std : 2000 + std; // 98 → 1998, 23 → 2023
+            },
         },
         c: {
             // anchored negative lookaheads reject the whole option when it
@@ -69,7 +78,12 @@ const AutoCpSubmitters = (() => {
             family: /python|pypy/i,
             prefer: [/pypy\s*3/i, /(?:c?python)\s*3/i, /pypy|python/i],
         },
-        java: { family: /\bjava\b(?!script)/i, prefer: [/\bjava\b(?!script)/i] },
+        java: {
+            family: /\bjava\b(?!script)/i,
+            prefer: [/\bjava\b(?!script)/i],
+            // rank by the JDK number, not stray bitness digits ("Java 8 64bit")
+            version: (text) => Number((text.match(/\bjava\s*(\d+)/i) || [])[1] || 0),
+        },
         kotlin: { family: /kotlin/i, prefer: [/kotlin/i] },
         go: { family: /\bgo\b/i, prefer: [/\bgo\b/i] },
         csharp: { family: /c#|csharp|mono/i, prefer: [/c#/i, /csharp|mono/i] },
@@ -83,15 +97,34 @@ const AutoCpSubmitters = (() => {
         php: { family: /php/i, prefer: [/php/i] },
     };
 
+    // Generic version signal: prefer a year-like number (language editions,
+    // e.g. "Rust ... (2024)" over "(2021)"), else the largest number around.
+    // "O2" is stripped first so the optimization suffix can't pose as one.
+    function defaultVersionScore(text) {
+        const numbers = (text.replace(/\bO2\b/gi, '').match(/\d+(?:\.\d+)?/g) || []).map(Number);
+        if (!numbers.length) return 0;
+        const years = numbers.filter((n) => n >= 1990 && n <= 2100);
+        return years.length ? Math.max(...years) : Math.max(...numbers);
+    }
+
     function findLanguageOption(selectEl, language) {
         const spec = LANGUAGE_SPECS[language];
         if (!spec) return null;
         const options = Array.from(selectEl.options);
         const current = options.find((o) => o.value === selectEl.value);
         if (current && spec.family.test(current.text)) return current; // keep the user's pick
+        const score = (o) => [
+            (spec.version || defaultVersionScore)(o.text),
+            /\bO2\b/i.test(o.text) ? 1 : 0,
+        ];
         for (const pattern of spec.prefer) {
-            const option = options.find((o) => pattern.test(o.text));
-            if (option) return option;
+            const candidates = options.filter((o) => pattern.test(o.text));
+            if (!candidates.length) continue;
+            return candidates.reduce((best, o) => {
+                const [bestVersion, bestO2] = score(best);
+                const [version, o2] = score(o);
+                return version > bestVersion || (version === bestVersion && o2 > bestO2) ? o : best;
+            });
         }
         return null;
     }

@@ -5,12 +5,14 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.ui.CollectionListModel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBUI
 import java.awt.Component
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.Box
+import javax.swing.JComponent
 import javax.swing.event.ListDataEvent
 import javax.swing.event.ListDataListener
 
@@ -20,6 +22,7 @@ class EditableListView<T>(
     val itemViewFactory: (T) -> ListItemView<T>,
     val itemFactory: () -> T,
     private val createButtonText: String,
+    private val trailingComponent: JComponent? = null,
 ) : JBScrollPane(), ListDataListener, Disposable {
 
     private val listPanel = JBPanelWithEmptyText(GridBagLayout())
@@ -48,9 +51,12 @@ class EditableListView<T>(
                     val item = itemFactory()
                     model.add(item)
                 }
+                trailingComponent?.let {
+                    cell(it).resizableColumn().align(AlignX.RIGHT)
+                }
             }
         }.apply {
-            border = JBUI.Borders.emptyLeft(8)
+            border = JBUI.Borders.empty(0, 8)
         }, itemConstraints)
 
         // fills remaining space

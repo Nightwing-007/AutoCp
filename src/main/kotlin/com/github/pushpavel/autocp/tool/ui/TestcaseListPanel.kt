@@ -7,6 +7,7 @@ import com.github.pushpavel.autocp.common.res.R
 import com.github.pushpavel.autocp.common.ui.swing.editableList.EditableListView
 import com.github.pushpavel.autocp.database.SolutionFiles
 import com.github.pushpavel.autocp.database.models.Testcase
+import com.github.pushpavel.autocp.submit.SolutionSubmitter
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
@@ -31,6 +32,7 @@ import java.awt.BorderLayout
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
+import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.event.ListDataEvent
 import javax.swing.event.ListDataListener
@@ -52,6 +54,12 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
     val component: JComponent
 
     init {
+        val submitButton = JButton("Submit").apply {
+            toolTipText = "Submit this solution to its online judge via the AutoCp Submit browser extension"
+            isVisible = false
+            addActionListener { SolutionSubmitter.submit(project, pathString) }
+        }
+
         val listComponent = EditableListView(
             testcaseListModel,
             { TestcasePanel(testcaseListModel) },
@@ -59,7 +67,8 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
                 val name = testcaseNameEnforcer.buildUniqueNameWithPrefix("Testcase")
                 Testcase(name, "input", "output")
             },
-            "New Testcase"
+            "New Testcase",
+            submitButton
         )
 
         val copyAllAction = object : DumbAwareAction("Copy All Testcases", null, AllIcons.Actions.Copy) {
@@ -142,6 +151,12 @@ class TestcaseListPanel(project: Project, private val pathString: String) : Disp
                 resetting = true
                 testcaseListModel.replaceAll(it.testcases)
                 resetting = false
+            }
+        }
+
+        scope.launch {
+            flow.collect {
+                submitButton.isVisible = it.getLinkedProblem(project)?.url?.isNotBlank() == true
             }
         }
 

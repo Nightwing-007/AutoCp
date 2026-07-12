@@ -3,6 +3,7 @@ package com.github.pushpavel.autocp.gather.base
 import com.github.pushpavel.autocp.common.helpers.ioScope
 import com.github.pushpavel.autocp.common.res.R
 import com.github.pushpavel.autocp.gather.models.ProblemJson
+import com.github.pushpavel.autocp.submit.SubmitBridge
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -123,6 +124,8 @@ class ProblemGatheringBridge : Disposable {
  */
 class ProblemGatheringBridgeStarter : ProjectActivity, DumbAware {
     override suspend fun execute(project: Project) {
+        // the submit server must bind first so it wins the port shared with competitive companion
+        SubmitBridge.getInstance().start()
         ProblemGatheringBridge.getInstance().start()
     }
 }

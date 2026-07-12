@@ -1,0 +1,46 @@
+{
+    "manifest_version": 3,
+    "name": "AutoCp Submit",
+    "version": "0.2.1",
+    "description": "Companion extension for the AutoCp IDE plugin: receives solutions from the IDE and submits them on online judges.",
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "permissions": [
+        "storage",
+        "alarms",
+        "notifications"
+    ],
+    "host_permissions": [
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://codeforces.com/*",
+                "*://m1.codeforces.com/*",
+                "*://m2.codeforces.com/*",
+                "*://m3.codeforces.com/*",
+                "*://atcoder.jp/*",
+                "*://www.luogu.com.cn/*",
+                "*://hydro.ac/*",
+                "*://vjudge.net/*"
+            ],
+            "js": [
+                "submitters.js",
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "AutoCp Submit"
+    }
+}

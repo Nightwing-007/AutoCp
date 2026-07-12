@@ -14,6 +14,7 @@
         <action id="RunAutoCpStress" class="com.github.pushpavel.autocp.config.actions.RunAutoCpStressAction">
             <keyboard-shortcut first-keystroke="alt shift X" keymap="$default"/>
         </action>
+        <action id="SubmitAutoCp" class="com.github.pushpavel.autocp.submit.SubmitAutoCpAction"/>
     </actions>
     <extensions defaultExtensionNs="com.intellij">
 

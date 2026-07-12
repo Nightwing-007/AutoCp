@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-12
+
 - feat: one-click judge submission via a companion browser extension by @znzryb in https://github.com/Pushpavel/AutoCp/pull/172
 - fix: stop registering run configuration producers so AutoCp no longer crowds out native run configurations by @znzryb in https://github.com/Pushpavel/AutoCp/pull/173
 - fix: analytics ServiceConfigurationError on IDEs that bundle their own ktor (2025.2+/2026.1) by @znzryb in https://github.com/Pushpavel/AutoCp/pull/174
@@ -200,7 +202,8 @@
 
 - Initial Release 🎉🎉😀
 
-[Unreleased]: https://github.com/Pushpavel/AutoCp/compare/v0.9.3...HEAD
+[Unreleased]: https://github.com/Pushpavel/AutoCp/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/Pushpavel/AutoCp/compare/v0.9.3...v0.10.0
 [0.9.3]: https://github.com/Pushpavel/AutoCp/compare/v0.9.2...v0.9.3
 [0.9.2]: https://github.com/Pushpavel/AutoCp/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/Pushpavel/AutoCp/compare/v0.9.0...v0.9.1

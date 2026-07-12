@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- feat: one-click judge submission via a companion browser extension by @znzryb in https://github.com/Pushpavel/AutoCp/pull/172
+- fix: stop registering run configuration producers so AutoCp no longer crowds out native run configurations by @znzryb in https://github.com/Pushpavel/AutoCp/pull/173
+- fix: analytics ServiceConfigurationError on IDEs that bundle their own ktor (2025.2+/2026.1) by @znzryb in https://github.com/Pushpavel/AutoCp/pull/174
+- fix: endless loading of Project settings page when no project is open by @znzryb in https://github.com/Pushpavel/AutoCp/pull/175
+
 ## [0.9.3] - 2026-07-11
 
 - feat: only show problem gathering popup in the focused IDE window by @znzryb in https://github.com/Pushpavel/AutoCp/pull/168

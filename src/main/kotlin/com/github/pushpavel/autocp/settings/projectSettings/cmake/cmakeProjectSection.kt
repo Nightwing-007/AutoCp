@@ -10,8 +10,9 @@ import kotlin.io.path.exists
 
 fun Panel.cmakeProjectSection(project: Project) {
     val cmakeSettings = project.cmakeSettings()
-    val cmakeFile = Paths.get(project.basePath!!, ".autocp")
-    if (ApplicationInfo.getInstance().build.productCode == "CL" || cmakeFile.exists())
+    // basePath is null for the default project (settings opened with no project open)
+    val cmakeFile = project.basePath?.let { Paths.get(it, ".autocp") }
+    if (ApplicationInfo.getInstance().build.productCode == "CL" || cmakeFile?.exists() == true)
         row {
             checkBox(R.strings.addToCMakeMsg).bindSelected(
                 { cmakeSettings.addToCMakeLists },

@@ -18,8 +18,9 @@ import kotlin.io.path.nameWithoutExtension
 import com.intellij.execution.ExecutionTarget
 
 /**
- * Implementation Class for a Custom Run Configuration that can also be created from context (by right-clicking and run)
- * 
+ * Implementation Class for a Custom Run Configuration, created on the fly by the
+ * "Run with AutoCp" / "Stress Test with AutoCp" actions (never registered in RunManager)
+ *
  * Implements TargetEnvironmentAwareRunProfile to explicitly declare that AutoCp does not depend on
  * any ExecutionTarget and should be able to run independently of CMake or other target configurations.
  */
@@ -62,7 +63,7 @@ open class AutoCpConfig(project: Project, factory: ConfigurationFactory, name: S
 
 
     /**
-     * Suggests Name for Run configurations created from Context (by right-clicking and run)
+     * Suggests Name for Run configurations created by the AutoCp run actions
      */
     override fun suggestedName(): String? {
         if (solutionFilePath.isEmpty())

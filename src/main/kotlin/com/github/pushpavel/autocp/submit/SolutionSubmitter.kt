@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.net.URI
 import kotlin.io.path.Path
+import kotlin.io.path.extension
 
 /**
  * Resolves a solution file to its linked problem and hands `{url, sourceCode}`
@@ -35,8 +36,9 @@ object SolutionSubmitter {
 
         val code = runCatching { CppHeaderExpander.expandIfCpp(Path(pathString), sourceCode) }.getOrNull()
             ?: sourceCode
+        val language = SubmitLanguage.fromExtension(Path(pathString).extension)
 
-        if (bridge.submit(SubmitData(problem.url, code)))
+        if (bridge.submit(SubmitData(problem.url, code, language)))
             R.notify.submitSent(problem.name)
         else
             R.notify.submitBrowserNotConnected()

@@ -47,6 +47,77 @@ const AutoCpSubmitters = (() => {
         element.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
+    // Normalized language tokens (SubmitData.language, sent by the plugin)
+    // mapped to matchers applied against the judge's language <select> option
+    // texts. `family` tells whether an option is that language at all — when
+    // the currently selected option already matches, it is kept, so the user's
+    // preferred dialect (say, a specific C++ standard on codeforces) survives.
+    // `prefer` picks a new option; first pattern with a hit wins.
+    const LANGUAGE_SPECS = {
+        cpp: {
+            family: /[cg]\+\+/i,
+            prefer: [/[cg]\+\+\s*2[3-9]/i, /[cg]\+\+\s*20/i, /[cg]\+\+/i],
+        },
+        c: {
+            // anchored negative lookaheads reject the whole option when it
+            // mentions C++ or C# anywhere (e.g. "C++ 20 (gcc 12.2)")
+            family: /^(?!.*\+\+)(?!.*c#).*(?:\bgcc\b|\bc(?:[0-9][0-9])?\b)/i,
+            prefer: [/^(?!.*\+\+)(?!.*c#).*\bgcc\b/i, /^(?!.*\+\+)(?!.*c#).*\bc\b/i],
+        },
+        rust: { family: /rust/i, prefer: [/rust/i] },
+        python: {
+            family: /python|pypy/i,
+            prefer: [/pypy\s*3/i, /(?:c?python)\s*3/i, /pypy|python/i],
+        },
+        java: { family: /\bjava\b(?!script)/i, prefer: [/\bjava\b(?!script)/i] },
+        kotlin: { family: /kotlin/i, prefer: [/kotlin/i] },
+        go: { family: /\bgo\b/i, prefer: [/\bgo\b/i] },
+        csharp: { family: /c#|csharp|mono/i, prefer: [/c#/i, /csharp|mono/i] },
+        javascript: { family: /javascript|node/i, prefer: [/node/i, /javascript/i] },
+        ruby: { family: /ruby/i, prefer: [/ruby/i] },
+        haskell: { family: /haskell|ghc/i, prefer: [/haskell|ghc/i] },
+        pascal: { family: /pascal|delphi|fpc/i, prefer: [/pascal|delphi|fpc/i] },
+        d: { family: /\bdmd\b|\bd\b/i, prefer: [/\bdmd\b|\bd\b/i] },
+        ocaml: { family: /ocaml/i, prefer: [/ocaml/i] },
+        scala: { family: /\bscala\b/i, prefer: [/\bscala\b/i] }, // \b: "PascalABC" contains "scala"
+        php: { family: /php/i, prefer: [/php/i] },
+    };
+
+    function findLanguageOption(selectEl, language) {
+        const spec = LANGUAGE_SPECS[language];
+        if (!spec) return null;
+        const options = Array.from(selectEl.options);
+        const current = options.find((o) => o.value === selectEl.value);
+        if (current && spec.family.test(current.text)) return current; // keep the user's pick
+        for (const pattern of spec.prefer) {
+            const option = options.find((o) => pattern.test(o.text));
+            if (option) return option;
+        }
+        return null;
+    }
+
+    // Drives the language <select> to match the submission's language.
+    // Returns null on success, or a message telling the user to finish the
+    // submission by hand (fill() then must NOT auto-click submit).
+    function applyLanguage(selectEl, language) {
+        if (!language)
+            return 'AutoCp: unknown source language — pick it and press submit yourself';
+        const option = findLanguageOption(selectEl, language);
+        if (!option)
+            return `AutoCp: no "${language}" option in the language list — pick it and press submit yourself`;
+        if (option.value !== selectEl.value) setValue(selectEl, option.value);
+        return null;
+    }
+
+    // For judges whose language control may be missing or undrivable
+    // (markup drift, custom widgets): C++ keeps the old auto-submit behavior
+    // since every judge defaults to / remembers it, anything else stops.
+    function applyLanguageLenient(selectEl, language) {
+        if (selectEl) return applyLanguage(selectEl, language);
+        if (language === 'cpp') return null;
+        return 'AutoCp: pick the language on the page, then press submit yourself';
+    }
+
     const submitters = {
         codeforces: {
             domains: ['codeforces.com', 'm1.codeforces.com', 'm2.codeforces.com', 'm3.codeforces.com'],
@@ -72,6 +143,10 @@ const AutoCpSubmitters = (() => {
                     setValue(codeEl, `${problem[1]}${problem[2]}`);
                 }
 
+                const languageEl = await waitForElement('select[name="programTypeId"]');
+                const manual = applyLanguage(languageEl, data.language);
+                if (manual) return manual;
+
                 const submitBtn = await waitForElement('.submit');
                 submitBtn.disabled = false;
                 submitBtn.click();
@@ -86,8 +161,9 @@ const AutoCpSubmitters = (() => {
                 return `${url.origin}/contests/${task[1]}/submit?taskScreenName=${task[2]}`;
             },
             async fill(data, ui) {
+                // AtCoder rejects submissions without a language, so set it before the code
                 const languageEl = await waitForElement('#select-lang > div > select');
-                setValue(languageEl, '6017'); // C++ 20 (gcc); AtCoder rejects submissions without a language
+                const manual = applyLanguage(languageEl, data.language);
 
                 const editorBtn = await waitForElement('.editor-buttons > button:nth-child(3)');
                 if (editorBtn.getAttribute('aria-pressed') !== 'true') editorBtn.click();
@@ -96,6 +172,8 @@ const AutoCpSubmitters = (() => {
                 await waitFor(() => codeEl.style.display !== 'none');
                 setValue(codeEl, data.sourceCode);
                 editorBtn.click();
+
+                if (manual) return manual;
 
                 if (document.querySelector('.cf-challenge') !== null) {
                     ui?.setMessage('AutoCp: solve the Cloudflare challenge to continue…');
@@ -121,6 +199,10 @@ const AutoCpSubmitters = (() => {
                 const editor = await waitForElement('.cm-content');
                 editor.innerText = data.sourceCode;
 
+                // luogu's language picker is a custom widget we cannot drive
+                const manual = applyLanguageLenient(null, data.language);
+                if (manual) return manual;
+
                 const submitBtn = await waitForElement(
                     '#app > div.main-container > div > main > div > div > div.main > div > div.body > button');
                 submitBtn.click();
@@ -142,6 +224,11 @@ const AutoCpSubmitters = (() => {
             async fill(data, ui) {
                 const sourceEl = await waitForElement('textarea');
                 setValue(sourceEl, data.sourceCode);
+
+                const manual = applyLanguageLenient(
+                    document.querySelector('select[name="lang"]'), data.language);
+                if (manual) return manual;
+
                 (await waitForElement('input[type="submit"]')).click();
             },
         },
@@ -155,6 +242,12 @@ const AutoCpSubmitters = (() => {
                 (await waitForElement('#btn-submit')).click();
                 const sourceEl = await waitForElement('#submit-solution');
                 setValue(sourceEl, data.sourceCode);
+
+                const manual = applyLanguageLenient(
+                    document.querySelector('#submit-language, .modal select[name="language"]'),
+                    data.language);
+                if (manual) return manual;
+
                 (await waitForElement('.modal #btn-submit')).click();
             },
         },

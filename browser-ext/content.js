@@ -15,9 +15,12 @@
 
     const ui = createOverlay('AutoCp: submitting…');
     try {
-        await submitter.fill(data, ui);
+        // fill() returns undefined when it submitted, or a message when the
+        // user must pick the language / press submit themselves
+        const manualMessage = await submitter.fill(data, ui);
         await chrome.runtime.sendMessage({ type: 'submitDone', success: true });
-        ui.remove();
+        if (manualMessage) ui.setMessage(manualMessage, 20000);
+        else ui.remove();
     } catch (e) {
         const message = String((e && e.message) || e);
         await chrome.runtime.sendMessage({ type: 'submitDone', success: false, message });

@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "AutoCp Submit",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Companion extension for the AutoCp IDE plugin: receives solutions from the IDE and submits them on online judges.",
     "icons": {
         "16": "icons/icon16.png",

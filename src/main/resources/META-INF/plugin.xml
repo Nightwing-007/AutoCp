@@ -19,8 +19,6 @@
 
         <configurationType implementation="com.github.pushpavel.autocp.config.AutoCpConfigType"/>
         <configurationType implementation="com.github.pushpavel.autocp.config.stress.AutoCpStressConfigType"/>
-        <runConfigurationProducer implementation="com.github.pushpavel.autocp.config.AutoCpConfigProducer"/>
-        <runConfigurationProducer implementation="com.github.pushpavel.autocp.config.stress.AutoCpStressConfigProducer"/>
         <notificationGroup id="autocp-notifications-group" key="notificationGroup" displayType="BALLOON"/>
 
         <!--    Settings   -->

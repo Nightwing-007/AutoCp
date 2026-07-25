@@ -10,6 +10,7 @@ import com.github.pushpavel.autocp.config.validators.getValidSolutionFile
 import com.github.pushpavel.autocp.database.models.Program
 import com.github.pushpavel.autocp.database.models.SolutionFile
 import com.github.pushpavel.autocp.database.models.Testcase
+import com.github.pushpavel.autocp.settings.generalSettings.AutoCpGeneralSettings
 import com.github.pushpavel.autocp.tester.base.*
 import com.github.pushpavel.autocp.tester.errors.TestGenerationErr
 import com.github.pushpavel.autocp.tester.tree.TestNode
@@ -104,22 +105,23 @@ class AutoCpTestingProcessHandler(val project: Project, private val config: Auto
         processFactory: ProcessFactory,
         workingDir: File
     ): TestNode {
+        val ignoreStderr = AutoCpGeneralSettings.instance.ignoreStderr
         val judge = compileIntoProcessFactory(
             solutionFile.judgeSettings.judgeProgram, "judge", File(workingDir, "judge")
-        )?.let { Judge(ProcessRunner(it, File(workingDir, "judge")), solutionFile.judgeSettings) }
-        val participant = ProcessRunner(processFactory, workingDir)
+        )?.let { Judge(ProcessRunner(it, File(workingDir, "judge"), ignoreStderr), solutionFile.judgeSettings) }
+        val participant = ProcessRunner(processFactory, workingDir, ignoreStderr)
         val staticTestcases = solutionFile.testcases.map {
             TestNode.Leaf(it.name, Testcase(it.name, it.input, it.output))
         }.asSequence()
         val generatingTestcases = suspend {
             val generator = compileIntoProcessFactory(
                 solutionFile.generator.generatorProgram, "gen", File(workingDir, "gen")
-            )?.let { ProcessRunner(it, File(workingDir, "gen")) }
+            )?.let { ProcessRunner(it, File(workingDir, "gen"), ignoreStderr) }
             if (generator == null)
                 throw TestGenerationErr.GeneratorNotProvided()
             val correct = compileIntoProcessFactory(
                 solutionFile.generator.correctProgram, "correct", File(workingDir, "correct")
-            )?.let { ProcessRunner(it, File(workingDir, "correct")) }
+            )?.let { ProcessRunner(it, File(workingDir, "correct"), ignoreStderr) }
             sequence {
                 for (i in 1..solutionFile.generator.stressTestcaseAmount) {
                     var testInput: String

@@ -46,6 +46,9 @@ object AutoCpStrings {
     const val onlyActiveWindowText = "Only show problem dialog in the focused window"
     const val onlyActiveWindowComment = "When parsing a problem from the browser, only the most recently focused IDE window receives it. Disable to broadcast to all open projects (legacy behavior)."
 
+    const val ignoreStderrText = "Ignore output written to stderr"
+    const val ignoreStderrComment = "Debug logs printed to stderr no longer fail a testcase with a runtime error, matching how online judges verdict a submission. The verdict then depends only on the exit code and on stdout. Stderr is still shown below the testcase output. Disable to fail any testcase that writes to stderr (legacy behavior)."
+
     fun OpenFileOnGather.presentable() = when (this) {
         OpenFileOnGather.NONE -> "None"
         OpenFileOnGather.ONLY_FIRST -> "Only first"

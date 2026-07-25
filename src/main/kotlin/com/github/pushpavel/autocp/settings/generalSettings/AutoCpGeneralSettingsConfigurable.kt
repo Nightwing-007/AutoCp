@@ -29,5 +29,12 @@ class AutoCpGeneralSettingsConfigurable : BoundConfigurable("AutoCp") {
             }
             FileGenerationRootRow().placeUI(this)
         }
+        group("Testing") {
+            row {
+                checkBox(R.strings.ignoreStderrText)
+                    .bindSelected(generalSettings::ignoreStderr)
+                    .comment(R.strings.ignoreStderrComment)
+            }
+        }
     }
 }

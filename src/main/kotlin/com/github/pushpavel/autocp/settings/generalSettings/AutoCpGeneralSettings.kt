@@ -15,6 +15,7 @@ class AutoCpGeneralSettings : PersistentStateComponent<AutoCpGeneralSettings> {
     var openFilesOnGather = OpenFileOnGather.ONLY_FIRST
     var fileGenerationRoot = "\$groupName"
     var onlyActiveWindow = true
+    var ignoreStderr = true
 
     override fun getState() = this
 
@@ -22,6 +23,7 @@ class AutoCpGeneralSettings : PersistentStateComponent<AutoCpGeneralSettings> {
         openFilesOnGather = state.openFilesOnGather
         fileGenerationRoot = state.fileGenerationRoot
         onlyActiveWindow = state.onlyActiveWindow
+        ignoreStderr = state.ignoreStderr
     }
 
     companion object {

@@ -26,7 +26,8 @@ class Judge(private val judge: ProcessRunner, private val settings: JudgeSetting
         if (performance.exitCode != 0)
             return Verdict.RuntimeErr(
                 performance["answer"] ?: "",
-                "Solution exited with invalid exit code ${performance.exitCode}"
+                "Solution exited with invalid exit code ${performance.exitCode}" +
+                        performance.stderr.ifEmpty { null }?.let { "\n\n$it" }.orEmpty()
             )
         val judged = judge
             .setInput(testcase.input, "input.txt")
@@ -35,8 +36,12 @@ class Judge(private val judge: ProcessRunner, private val settings: JudgeSetting
             .registerOutput("comment", "comment.txt")
             .run()
         return when (judged.exitCode) {
-            0 -> Verdict.CorrectAnswer(performance["answer"] ?: "", performance.executionTime, judged["comment"])
-            1 -> Verdict.WrongAnswer(testcase.output, performance["answer"] ?: "", performance.executionTime, judged["comment"])
+            0 -> Verdict.CorrectAnswer(
+                performance["answer"] ?: "", performance.executionTime, judged["comment"], performance.stderr
+            )
+            1 -> Verdict.WrongAnswer(
+                testcase.output, performance["answer"] ?: "", performance.executionTime, judged["comment"], performance.stderr
+            )
             else -> throw TestcaseJudgingErr.JudgeFailed(performance["answer"] ?: "", "Judge exited with invalid exit code ${judged.exitCode}", judged.exitCode)
         }
     }
@@ -57,8 +62,12 @@ class Judge(private val judge: ProcessRunner, private val settings: JudgeSetting
         participantJob.invokeOnCompletion { judge.terminateInput() }
         val (performance, judged) = awaitAll(participantJob, judgeJob)
         return@coroutineScope when (judged.exitCode) {
-            0 -> Verdict.CorrectAnswer(output.toString(), performance.executionTime, judged["comment"])
-            1 -> Verdict.WrongAnswer(testcase.output, output.toString(), performance.executionTime, judged["comment"])
+            0 -> Verdict.CorrectAnswer(
+                output.toString(), performance.executionTime, judged["comment"], performance.stderr
+            )
+            1 -> Verdict.WrongAnswer(
+                testcase.output, output.toString(), performance.executionTime, judged["comment"], performance.stderr
+            )
             else -> throw TestcaseJudgingErr.JudgeFailed(output.toString(), "Judge exited with invalid exit code ${judged.exitCode}", judged.exitCode)
         }
     }

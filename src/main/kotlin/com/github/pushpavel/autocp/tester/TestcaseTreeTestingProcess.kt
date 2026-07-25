@@ -32,14 +32,17 @@ class TestcaseTreeTestingProcess(rootTestNode: TestNode, reporter: Listener, pri
                 if (performance.exitCode != 0) {
                     Verdict.RuntimeErr(
                         performance["answer"] ?: "",
-                        "Solution exited with invalid exit code ${performance.exitCode}"
+                        "Solution exited with invalid exit code ${performance.exitCode}" +
+                                performance.stderr.ifEmpty { null }?.let { "\n\n$it" }.orEmpty()
                     )
                 } else {
                     val answer = performance["answer"]?.trimByLines() ?: ""
                     if (!answer.contentEquals(expectedOutput))
-                        Verdict.WrongAnswer(node.testcase.output, answer, performance.executionTime)
+                        Verdict.WrongAnswer(
+                            node.testcase.output, answer, performance.executionTime, null, performance.stderr
+                        )
                     else
-                        Verdict.CorrectAnswer(answer, performance.executionTime)
+                        Verdict.CorrectAnswer(answer, performance.executionTime, null, performance.stderr)
                 }
             }
         } catch (e: Exception) {

@@ -29,9 +29,11 @@ class TreeTestingProcessReporter(private val processHandler: ProcessHandler) : T
     override fun leafFinish(node: ResultNode.Leaf) {
         val nodeName = node.sourceNode.name
         if (node.verdict is com.github.pushpavel.autocp.tester.errors.Verdict.CorrectAnswer) {
+            testStdOut(nodeName).addAttribute("out", node.verdict.output + '\n').apply()
+            reportStderr(nodeName, node.verdict.stderr)
             testStdOut(nodeName).addAttribute(
                 "out",
-                node.verdict.output + '\n' + R.strings.verdictOneLine(node.verdict) + '\n' +
+                R.strings.verdictOneLine(node.verdict) + '\n' +
                 (node.verdict.comment?.trim()?.let { "judge's comment: $it\n" } ?: "")
             ).apply()
 
@@ -45,6 +47,7 @@ class TreeTestingProcessReporter(private val processHandler: ProcessHandler) : T
         when (node.verdict) {
             is com.github.pushpavel.autocp.tester.errors.Verdict.WrongAnswer -> {
                 testStdOut(nodeName).addAttribute("out", node.verdict.actualOutput + '\n').apply()
+                reportStderr(nodeName, node.verdict.stderr)
 
                 testFailed(nodeName)
                     .addAttribute("message",
@@ -137,6 +140,19 @@ class TreeTestingProcessReporter(private val processHandler: ProcessHandler) : T
 
     override fun testingProcessError(message: String) {
         processHandler.notifyTextAvailable(message + "\n", ProcessOutputTypes.STDERR)
+    }
+
+    /**
+     * reports the captured error stream of a testcase through the error channel so that
+     * debug logs stay visible and keep their distinct color once they no longer decide the verdict
+     */
+    private fun reportStderr(nodeName: String, stderr: String) {
+        val trimmed = stderr.trim()
+        if (trimmed.isEmpty()) return
+        testStdErr(nodeName).addAttribute(
+            "out",
+            "${"___".repeat(5)}[ stderr ]${"___".repeat(5)}\n$trimmed\n"
+        ).apply()
     }
 
     private fun ServiceMessageBuilder.apply() {

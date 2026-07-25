@@ -14,7 +14,16 @@ import java.io.IOException
  * this enables to run a process by just calling ProcessRunner.run which returns
  * the output and errors in CapturedResults Object
  */
-class ProcessRunner(private val factory: ProcessFactory, private val workingDir: File?) {
+class ProcessRunner(
+    private val factory: ProcessFactory,
+    private val workingDir: File?,
+    /**
+     * when true, output written to the error stream is captured into
+     * [CapturedResults.stderr] instead of failing the process with
+     * [ProcessRunnerErr.RuntimeErr], letting debug logs coexist with a passing verdict
+     */
+    private val ignoreStderr: Boolean = false
+) {
 
     private val inputs: MutableMap<String?, String> = mutableMapOf()
     private val outputs: MutableMap<String, String?> = mutableMapOf()
@@ -52,7 +61,9 @@ class ProcessRunner(private val factory: ProcessFactory, private val workingDir:
                 val deferredOutput = readOutputAsync(process)
                 val executionTime = monitorProcess(process, timeLimit)
                 val exitCode = process.exitValue()
-                val stdout = deferredOutput.awaitAsResult().getOrNull()
+                val captured = deferredOutput.awaitAsResult().getOrNull()
+                val stdout = captured?.first
+                val stderr = captured?.second ?: ""
 
                 val out = mutableMapOf<String, String?>()
                 for (output in outputs) {
@@ -66,7 +77,7 @@ class ProcessRunner(private val factory: ProcessFactory, private val workingDir:
                     for (deletion in deletions)
                         File(workingDir, deletion).takeIf { it.exists() }?.delete()
 
-                CapturedResults(out, executionTime, exitCode)
+                CapturedResults(out, executionTime, exitCode, stderr)
             } finally {
                 process.destroy()
             }
@@ -145,16 +156,17 @@ class ProcessRunner(private val factory: ProcessFactory, private val workingDir:
         val error = async { process.errorStream.bufferedReader().readText() }
 
         awaitAll(output, error).let {
-            if (it[1].isNotEmpty())
+            if (!ignoreStderr && it[1].isNotEmpty())
                 throw ProcessRunnerErr.RuntimeErr(it[0], it[1])
-            it[0]
+            Pair(it[0], it[1])
         }
     }
 
     data class CapturedResults(
         val outputs: Map<String, String?>,
         val executionTime: Long,
-        val exitCode: Int
+        val exitCode: Int,
+        val stderr: String = ""
     ) {
         operator fun get(registeredOutput: String): String? {
             return outputs[registeredOutput]

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- feat: add a setting to stop stderr output from failing a testcase by @znzryb in https://github.com/Pushpavel/AutoCp/pull/178
+
 ## [0.10.0] - 2026-07-12
 
 - feat: one-click judge submission via a companion browser extension by @znzryb in https://github.com/Pushpavel/AutoCp/pull/172

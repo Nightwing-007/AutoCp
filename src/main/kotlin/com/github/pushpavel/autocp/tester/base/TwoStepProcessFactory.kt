@@ -64,10 +64,13 @@ class TwoStepProcessFactory(private val workingDir: File, private val commandLis
                 try {
                     val factory = TwoStepProcessFactory(workingDir, buildCommandList)
                     result = ProcessRunner(factory, workingDir).run()
+                    val log = result["stdout"]?.trim().orEmpty()
                     if (result.exitCode != 0) {
                         throw ProcessRunnerErr.RuntimeErr(
-                            result["stdout"] ?: "",
-                            "Compilation failed with exit code ${result.exitCode} but produced no error output. Check if your compiler dependencies are in your system PATH."
+                            log,
+                            "Compilation failed with exit code ${result.exitCode}" +
+                                if (log.isEmpty()) "\nNo output was produced by the build command."
+                                else "\n\n$log"
                         )
                     }
                 } catch (e: Exception) {
